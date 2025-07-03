@@ -1,9 +1,11 @@
 // lib/pages/product_detail_page.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controllers/cart_controller.dart';
-import '../controllers/favorite_controller.dart';
-import '../models/product_model.dart';
+import 'package:storage/controllers/cart_controller.dart';
+import 'package:storage/controllers/favorite_controller.dart';
+import 'package:storage/models/product_model.dart';
+
+
 
 class ProductDetailPage extends StatelessWidget {
   final Product product;

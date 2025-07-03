@@ -1,11 +1,10 @@
 // lib/pages/product_list_page.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
-import '../controllers/auth_controller.dart';
-import '../controllers/product_controller.dart';
-import '../controllers/favorite_controller.dart';
-import '../controllers/cart_controller.dart';
+import 'package:storage/controllers/auth_controller.dart';
+import 'package:storage/controllers/cart_controller.dart';
+import 'package:storage/controllers/favorite_controller.dart';
+import 'package:storage/controllers/product_controller.dart';
 import 'favorites_page.dart';
 import 'cart_page.dart';
 import 'login_register_page.dart';

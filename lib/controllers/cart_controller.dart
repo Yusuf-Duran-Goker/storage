@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
-import '../models/product_model.dart';
+import 'package:storage/models/product_model.dart';
+
 
 class CartController extends GetxController {
   // Product → adet

@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
+import 'package:storage/models/product_model.dart';
 import 'package:storage/service/product_service.dart';
-import '../models/product_model.dart';
+
 
 
 class ProductController extends GetxController {

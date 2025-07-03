@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:storage/controllers/auth_controller.dart';
 
-import '../controllers/auth_controller.dart';
+
 import 'register_page.dart';
 import 'product_list_page.dart';
 

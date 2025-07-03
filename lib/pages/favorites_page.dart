@@ -1,8 +1,10 @@
 // lib/pages/favorites_page.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controllers/favorite_controller.dart';
-import '../controllers/cart_controller.dart';
+import 'package:storage/controllers/cart_controller.dart';
+import 'package:storage/controllers/favorite_controller.dart';
+
+
 
 class FavoritesPage extends StatelessWidget {
   const FavoritesPage({super.key});
