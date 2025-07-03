@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "371073606458",
+    "project_id": "storege-9e7e7",
+    "storage_bucket": "storege-9e7e7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:371073606458:android:caa6143c0bd402ff652603",
+        "android_client_info": {
+          "package_name": "com.example.storage"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD75nU0j6rvcudIZOZ9pxJerPs337ODdYI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
