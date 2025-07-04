@@ -1,19 +1,18 @@
 // lib/pages/register_page.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:storage/controllers/auth_controller.dart';
-
+import '../controllers/auth_controller.dart';
+import 'login_register_page.dart';
 
 class RegisterPage extends StatelessWidget {
-  RegisterPage({super.key});
+  RegisterPage({Key? key}) : super(key: key);
 
-  final AuthController authC = Get.find<AuthController>();
+  final _authC = Get.find<AuthController>();
+  final _emailCtrl = TextEditingController();
+  final _passwordCtrl = TextEditingController();
+  final _confirmPassCtrl = TextEditingController();
 
-  final TextEditingController emailCtrl       = TextEditingController();
-  final TextEditingController passwordCtrl    = TextEditingController();
-  final TextEditingController confirmPassCtrl = TextEditingController();
-
-  final Color buttonColor = const Color(0xFF90CAF9);
+  static const _buttonColor = Color(0xFF90CAF9);
 
   @override
   Widget build(BuildContext context) {
@@ -24,9 +23,9 @@ class RegisterPage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Email
+            // Email alanı
             TextField(
-              controller: emailCtrl,
+              controller: _emailCtrl,
               decoration: const InputDecoration(
                 hintText: "Email",
                 border: OutlineInputBorder(),
@@ -34,9 +33,9 @@ class RegisterPage extends StatelessWidget {
             ),
             const SizedBox(height: 12),
 
-            // Password
+            // Şifre alanı
             TextField(
-              controller: passwordCtrl,
+              controller: _passwordCtrl,
               obscureText: true,
               decoration: const InputDecoration(
                 hintText: "Password",
@@ -45,9 +44,9 @@ class RegisterPage extends StatelessWidget {
             ),
             const SizedBox(height: 12),
 
-            // Confirm Password
+            // Şifre onay alanı
             TextField(
-              controller: confirmPassCtrl,
+              controller: _confirmPassCtrl,
               obscureText: true,
               decoration: const InputDecoration(
                 hintText: "Confirm Password",
@@ -56,23 +55,23 @@ class RegisterPage extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // Register Button
+            // Register Butonu
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: buttonColor,
+                  backgroundColor: _buttonColor,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
                 onPressed: () async {
-                  final email   = emailCtrl.text.trim();
-                  final pass    = passwordCtrl.text;
-                  final confirm = confirmPassCtrl.text;
+                  final email = _emailCtrl.text.trim();
+                  final pass = _passwordCtrl.text;
+                  final confirm = _confirmPassCtrl.text;
 
-                  // Basit validasyon
+                  // Alan kontrolü
                   if (email.isEmpty || pass.isEmpty || confirm.isEmpty) {
                     Get.snackbar(
                       'Hata',
@@ -91,19 +90,20 @@ class RegisterPage extends StatelessWidget {
                   }
 
                   try {
-                    // Kayıt işlemi
-                    await authC.register(email, pass);
-                    // Kayıt sonrası otomatik çıkış yap
-                    await authC.signOut();
+                    // Kayıt
+                    await _authC.register(email, pass);
 
+                    // Başarılı olduğunda Login ekranına dön ve yeşil arka planlı bildirim ver
+                    Get.offAll(() => LoginRegisterPage());
                     Get.snackbar(
                       'Başarılı',
-                      'Kayıt tamamlandı. Lütfen giriş yapın.',
+                      'Kayıt başarılı! Lütfen giriş yapın.',
                       snackPosition: SnackPosition.BOTTOM,
+                      backgroundColor: Colors.green,
+                      colorText: Colors.white,
                     );
-                    // Login ekranına geri dön
-                    Get.back();
                   } catch (e) {
+                    // FirebaseAuthException da dahil tüm hatalar için
                     Get.snackbar(
                       'Kayıt Hatası',
                       e.toString(),
@@ -113,11 +113,7 @@ class RegisterPage extends StatelessWidget {
                 },
                 child: const Text(
                   'Register',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.black87,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(color: Colors.black87, fontSize: 16),
                 ),
               ),
             ),

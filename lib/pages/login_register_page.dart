@@ -1,25 +1,24 @@
 // lib/pages/login_register_page.dart
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:storage/controllers/auth_controller.dart';
 
-
-import 'register_page.dart';
+import '../controllers/auth_controller.dart';
+import 'package:storage/pages/register_page.dart';     // ← package import!
 import 'product_list_page.dart';
 
 class LoginRegisterPage extends StatelessWidget {
-  LoginRegisterPage({Key? key}) : super(key: key);
-
-  final _authC = Get.find<AuthController>();
-  final _emailCtrl = TextEditingController();
-  final _passwordCtrl = TextEditingController();
-
-  static const _buttonColor = Color(0xFF90CAF9);
+  const LoginRegisterPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final _authC = Get.find<AuthController>();
+    final _emailCtrl = TextEditingController();
+    final _passwordCtrl = TextEditingController();
+    const _buttonColor = Color(0xFF90CAF9);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Fake Storage"),
@@ -69,12 +68,11 @@ class LoginRegisterPage extends StatelessWidget {
                       _passwordCtrl.text,
                     );
                     // Başarılıysa ürün listesine geç
-                    Get.offAll(() => ProductListPage());
+                    Get.offAll(() => const ProductListPage());
                   } on FirebaseAuthException {
-                    // Tek bir sabit mesaj
                     Get.snackbar(
                       'Giriş Hatası',
-                      'Hatalı giriş yapıldı. Email veya şifrenizi kontrol ediniz.',
+                      'Email veya şifreniz hatalı. Lütfen kontrol ediniz.',
                       snackPosition: SnackPosition.BOTTOM,
                     );
                   } catch (_) {
