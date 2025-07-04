@@ -1,31 +1,48 @@
+// lib/controllers/product_controller.dart
+
 import 'package:get/get.dart';
 import 'package:storage/models/product_model.dart';
-import 'package:storage/service/product_service.dart';
-
-
+import 'package:storage/service/product_service.dart';           // ← Orijinal servis
+import 'package:storage/service/reactbd_product_service.dart';  // ← Yeni servis
 
 class ProductController extends GetxController {
-  final ProductService _service = ProductService();
+  // İki farklı servisi de tanımlıyoruz
+  final _fakeService    = ProductService();           // <-- Burada ProductService
+  final _reactBdService = ReactBdProductService();
 
-  var products = <Product>[].obs;
-  var categories = <String>[].obs;
+  // Reaktif state
+  var products         = <Product>[].obs;
+  var categories       = <String>[].obs;
   var selectedCategory = 'All'.obs;
-  var isLoading = false.obs;
-  var error = ''.obs;
+  var isLoading        = false.obs;
+  var error            = ''.obs;
 
   @override
   void onInit() {
     super.onInit();
-    loadProducts();
+    fetchAllProducts();
   }
 
-  Future<void> loadProducts() async {
+  /// Hem fakestoreapi.com hem de reactbd.org’dan ürünleri çekip birleştirir
+  Future<void> fetchAllProducts() async {
+    isLoading.value = true;
+    error.value     = '';
     try {
-      isLoading.value = true;
-      final list = await _service.fetchProducts();
-      products.assignAll(list);
-      // Kategorileri “All” da dahil ederek çıkar
-      categories.assignAll(['All', ...{for (var p in list) p.category}]);
+      // 1) fakestoreapi.com’dan
+      final list1 = await _fakeService.fetchProducts();
+      // 2) reactbd.org’dan
+      final list2 = await _reactBdService.fetchProducts();
+
+      // İki listeyi birleştir
+      final combined = [...list1, ...list2];
+      products.assignAll(combined);
+
+      // Kategorileri oluştur
+      final cats = combined.map((p) => p.category).toSet().toList();
+      categories.assignAll(['All', ...cats]);
+
+      // Varsayılan kategori
+      selectedCategory.value = 'All';
     } catch (e) {
       error.value = e.toString();
     } finally {
@@ -33,9 +50,13 @@ class ProductController extends GetxController {
     }
   }
 
-  // Seçili kategoriye göre filtrelenmiş ürünler
+  /// Seçilen kategoriye göre filtrelenmiş ürünler
   List<Product> get filteredProducts {
-    if (selectedCategory.value == 'All') return products;
-    return products.where((p) => p.category == selectedCategory.value).toList();
+    if (selectedCategory.value == 'All') {
+      return products;
+    }
+    return products
+        .where((p) => p.category == selectedCategory.value)
+        .toList();
   }
 }

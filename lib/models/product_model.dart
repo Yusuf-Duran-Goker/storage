@@ -1,3 +1,5 @@
+// lib/models/product_model.dart
+
 class Product {
   final int id;
   final String title;
@@ -5,6 +7,8 @@ class Product {
   final String description;
   final String category;
   final String image;
+  final double rating;
+  final int ratingCount;
 
   Product({
     required this.id,
@@ -13,14 +17,64 @@ class Product {
     required this.description,
     required this.category,
     required this.image,
+    required this.rating,
+    required this.ratingCount,
   });
 
-  factory Product.fromJson(Map<String, dynamic> json) => Product(
-    id: json['id'],
-    title: json['title'],
-    price: (json['price'] as num).toDouble(),
-    description: json['description'],
-    category: json['category'],
-    image: json['image'],
-  );
+  factory Product.fromJson(Map<String, dynamic> json) {
+    // id
+    final rawId = json['id'];
+    final id = (rawId is int)
+        ? rawId
+        : int.tryParse(rawId?.toString() ?? '') ?? 0;
+
+    // title, description, category, image
+    final title       = json['title']?.toString() ?? '';
+    final description = json['description']?.toString() ?? '';
+    final category    = json['category']?.toString() ?? '';
+    final image       = json['image']?.toString() ?? '';
+
+    // price
+    final rawPrice = json['price'];
+    final price = (rawPrice is num)
+        ? rawPrice.toDouble()
+        : double.tryParse(rawPrice?.toString() ?? '') ?? 0.0;
+
+    // rating alanı ya Map<String,dynamic> ya da num gelebiliyor
+    final dynamic ratingField = json['rating'];
+    double rate;
+    int count;
+
+    if (ratingField is Map<String, dynamic>) {
+      // Orijinal fakestoreapi’nin yapısı
+      final rawRate  = ratingField['rate'];
+      final rawCount = ratingField['count'];
+
+      rate  = (rawRate is num)
+          ? rawRate.toDouble()
+          : double.tryParse(rawRate?.toString() ?? '') ?? 0.0;
+      count = (rawCount is int)
+          ? rawCount
+          : int.tryParse(rawCount?.toString() ?? '') ?? 0;
+    } else if (ratingField is num) {
+      // ReactBD API bazen doğrudan sayısal gelebiliyor
+      rate  = ratingField.toDouble();
+      count = 0;
+    } else {
+      // Hiç gelmedi veya farklı tip
+      rate  = 0.0;
+      count = 0;
+    }
+
+    return Product(
+      id: id,
+      title: title,
+      price: price,
+      description: description,
+      category: category,
+      image: image,
+      rating: rate,
+      ratingCount: count,
+    );
+  }
 }

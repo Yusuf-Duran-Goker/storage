@@ -1,40 +1,73 @@
 // lib/pages/product_list_page.dart
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:storage/controllers/auth_controller.dart';
-import 'package:storage/controllers/cart_controller.dart';
-import 'package:storage/controllers/favorite_controller.dart';
-import 'package:storage/controllers/product_controller.dart';
+
+import '../controllers/auth_controller.dart';
+import '../controllers/product_controller.dart';
+import '../controllers/favorite_controller.dart';
+import '../controllers/cart_controller.dart';
+import '../controllers/profile_controller.dart';
+
+import 'product_detail_page.dart';
 import 'favorites_page.dart';
 import 'cart_page.dart';
 import 'login_register_page.dart';
-import 'product_detail_page.dart';
 
 class ProductListPage extends StatelessWidget {
-  const ProductListPage({super.key});
+  const ProductListPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final authC = Get.find<AuthController>();
-    final pc    = Get.put(ProductController());
-    final favC  = Get.put(FavoriteController());
-    final cartC = Get.put(CartController());
+    final authC    = Get.find<AuthController>();
+    final pc       = Get.put(ProductController());
+    final favC     = Get.put(FavoriteController());
+    final cartC    = Get.put(CartController());
+    final profileC = Get.put(ProfileController());
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Fake Storage'),
         centerTitle: true,
         backgroundColor: Colors.blue,
+        elevation: 0,
       ),
       drawer: Drawer(
-        child: Column(
+        child: ListView(
+          padding: EdgeInsets.zero,
           children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(color: Colors.blue),
-              child: Center(
-                child: Text(
-                  'Menü',
-                  style: TextStyle(color: Colors.white, fontSize: 24),
+            // Profil bilgilerini gösteren tıklanabilir header
+            DrawerHeader(
+              decoration: const BoxDecoration(color: Colors.blue),
+              padding: EdgeInsets.zero,
+              child: InkWell(
+                onTap: () => profileC.pickImage(),
+                child: Container(
+                  width: double.infinity,
+                  color: Colors.blue,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Obx(() {
+                        final path = profileC.imagePath.value;
+                        return CircleAvatar(
+                          radius: 40,
+                          backgroundColor: Colors.white,
+                          backgroundImage:
+                          path != null ? FileImage(File(path)) : null,
+                          child: path == null
+                              ? const Icon(Icons.person, size: 40, color: Colors.blue)
+                              : null,
+                        );
+                      }),
+                      const SizedBox(height: 8),
+                      Text(
+                        authC.user.value?.email ?? '',
+                        style: const TextStyle(color: Colors.white, fontSize: 14),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -42,11 +75,11 @@ class ProductListPage extends StatelessWidget {
             // Favoriler
             ListTile(
               leading: const Icon(Icons.star),
-              title: const Center(child: Text('Favoriler')),
-              onTap: () => Get.to(() => FavoritesPage()),
+              title: const Text('Favoriler'),
+              onTap: () => Get.to(() => const FavoritesPage()),
             ),
 
-            // Sepet (badge)
+            // Sepet (badge ile)
             Obx(() {
               final totalQty = cartC.items.values.fold<int>(0, (s, q) => s + q);
               return ListTile(
@@ -63,35 +96,28 @@ class ProductListPage extends StatelessWidget {
                           backgroundColor: Colors.red,
                           child: Text(
                             '$totalQty',
-                            style: const TextStyle(
-                              fontSize: 10,
-                              color: Colors.white,
-                              height: 1,
-                            ),
+                            style: const TextStyle(fontSize: 10, color: Colors.white, height: 1),
                           ),
                         ),
                       ),
                   ],
                 ),
-                title: const Center(child: Text('Sepet')),
-                onTap: () => Get.to(() => CartPage()),
+                title: const Text('Sepet'),
+                onTap: () => Get.to(() => const CartPage()),
               );
             }),
 
-            // Spacer ile Log Out'u en alta itiyoruz
-            const Spacer(),
+            const Divider(),
 
-            // Log Out öğesi
+            // Log Out en altta
             ListTile(
               leading: const Icon(Icons.logout),
-              title: const Center(child: Text('Log Out')),
+              title: const Text('Log Out'),
               onTap: () async {
                 await authC.signOut();
-                Get.offAll(() => LoginRegisterPage());
+                Get.offAll(() => const LoginRegisterPage());
               },
             ),
-
-            const SizedBox(height: 12),
           ],
         ),
       ),
@@ -103,6 +129,7 @@ class ProductListPage extends StatelessWidget {
         if (pc.error.value.isNotEmpty) {
           return Center(child: Text('Hata: ${pc.error.value}'));
         }
+
         return Column(
           children: [
             // Kategori filtresi
@@ -133,8 +160,7 @@ class ProductListPage extends StatelessWidget {
                       onTap: () => Get.to(() => ProductDetailPage(product: p)),
                       child: ListTile(
                         leading: Image.network(p.image, width: 50, height: 50),
-                        title: Text(p.title,
-                            maxLines: 1, overflow: TextOverflow.ellipsis),
+                        title: Text(p.title, maxLines: 1, overflow: TextOverflow.ellipsis),
                         subtitle: Text('\$${p.price.toStringAsFixed(2)}'),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -142,22 +168,16 @@ class ProductListPage extends StatelessWidget {
                             Obx(() {
                               final isFav = favC.isFavorite(p);
                               return IconButton(
-                                icon: Icon(
-                                  isFav ? Icons.star : Icons.star_border,
-                                  color: isFav ? Colors.amber : Colors.grey,
-                                ),
+                                icon: Icon(isFav ? Icons.star : Icons.star_border),
+                                color: isFav ? Colors.amber : Colors.grey,
                                 onPressed: () => favC.toggleFavorite(p),
                               );
                             }),
                             Obx(() {
                               final inCart = cartC.items.containsKey(p);
                               return IconButton(
-                                icon: Icon(
-                                  inCart
-                                      ? Icons.shopping_cart
-                                      : Icons.add_shopping_cart,
-                                  color: inCart ? Colors.green : null,
-                                ),
+                                icon: Icon(inCart ? Icons.shopping_cart : Icons.add_shopping_cart),
+                                color: inCart ? Colors.green : null,
                                 onPressed: () => cartC.addToCart(p),
                               );
                             }),
