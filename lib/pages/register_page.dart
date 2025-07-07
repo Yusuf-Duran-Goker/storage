@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
-import 'login_register_page.dart';
+import 'login_page.dart';
 
 class RegisterPage extends StatelessWidget {
   RegisterPage({Key? key}) : super(key: key);
@@ -94,7 +94,7 @@ class RegisterPage extends StatelessWidget {
                     await _authC.register(email, pass);
 
                     // Başarılı olduğunda Login ekranına dön ve yeşil arka planlı bildirim ver
-                    Get.offAll(() => LoginRegisterPage());
+                    Get.offAll(() => LoginPage());
                     Get.snackbar(
                       'Başarılı',
                       'Kayıt başarılı! Lütfen giriş yapın.',

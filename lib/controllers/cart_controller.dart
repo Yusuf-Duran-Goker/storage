@@ -2,9 +2,9 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';      // ← Bunu ekleyin
-import 'package:get/get.dart';
-import 'package:collection/collection.dart';              // firstWhereOrNull için
-import '../models/product_model.dart';
+import 'package:get/get.dart'; // firstWhereOrNull için
+import 'package:storage/models/product_model.dart';
+
 import 'product_controller.dart';
 import 'auth_controller.dart';
 

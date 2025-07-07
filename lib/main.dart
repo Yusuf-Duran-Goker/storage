@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'firebase_options.dart';
 import 'controllers/auth_controller.dart';
-import 'pages/login_register_page.dart';
+import 'pages/login_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Fake Store',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: LoginRegisterPage(),  // const olmadan
+      home: LoginPage(),  // const olmadan
     );
   }
 }

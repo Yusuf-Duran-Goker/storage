@@ -17,6 +17,7 @@ dependencies:
   # HTTP & Fotoğraf seçimi
   http: ^0.13.5
   image_picker: ^0.8.7+4
+  lottie: ^2.4.0
 
   # Küçük kalıcı veri (örn. profil yolu)
   shared_preferences: ^2.1.1
@@ -24,8 +25,8 @@ dependencies:
   # Firebase
   firebase_core: ^3.15.0
   firebase_auth: ^5.6.1
-  cloud_firestore: ^5.6.10    # firebase_core 3.x ile uyumlu
-  firebase_storage: ^12.4.8  # firebase_core 3.x ile uyumlu
+  cloud_firestore: ^5.6.10
+  firebase_storage: ^12.4.8
 
 dev_dependencies:
   flutter_test:
@@ -34,3 +35,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/anim/login_bg.json
+
