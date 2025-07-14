@@ -46,7 +46,6 @@ class Product {
     int count;
 
     if (ratingField is Map<String, dynamic>) {
-      // Orijinal fakestoreapi’nin yapısı
       final rawRate  = ratingField['rate'];
       final rawCount = ratingField['count'];
 
@@ -57,11 +56,9 @@ class Product {
           ? rawCount
           : int.tryParse(rawCount?.toString() ?? '') ?? 0;
     } else if (ratingField is num) {
-      // ReactBD API bazen doğrudan sayısal gelebiliyor
       rate  = ratingField.toDouble();
       count = 0;
     } else {
-      // Hiç gelmedi veya farklı tip
       rate  = 0.0;
       count = 0;
     }
@@ -77,4 +74,15 @@ class Product {
       ratingCount: count,
     );
   }
+
+  /// Aynı id’ye sahip nesneleri eş saymak için:
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is Product && other.id == id;
+  }
+
+  /// id bazlı hashCode
+  @override
+  int get hashCode => id.hashCode;
 }

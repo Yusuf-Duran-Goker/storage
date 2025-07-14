@@ -1,51 +1,60 @@
-// lib/controllers/favorite_controller.dart
-
+import 'dart:async';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../models/product_model.dart';
 
 class FavoriteController extends GetxController {
-  final _auth  = FirebaseAuth.instance;
+  final _auth = FirebaseAuth.instance;
   final _store = FirebaseFirestore.instance;
 
-  /// Favori ürün ID’lerini tutan reaktif liste
-  RxList<int> favorites = <int>[].obs;
+  /// Sadece id’leri tutan reaktif set
+  final RxSet<int> favoriteIds = <int>{}.obs;
+  StreamSubscription<DocumentSnapshot>? _sub;
 
   String get _uid => _auth.currentUser!.uid;
 
   @override
   void onInit() {
     super.onInit();
-    // Oturum açıldığında Firestore’dan veriyi yükle
+    // Oturum aç-kapat değişimlerini dinle
     _auth.authStateChanges().listen((user) {
-      if (user != null) _loadFavorites();
-      else favorites.clear();
+      _sub?.cancel();
+      if (user != null) {
+        // Kullanıcının dökümanını dinle
+        _sub = _store
+            .collection('users')
+            .doc(_uid)
+            .snapshots()
+            .listen((snap) {
+          final data = snap.data() as Map<String, dynamic>? ?? {};
+          final list = (data['favorites'] as List<dynamic>?)?.cast<int>() ?? [];
+          favoriteIds.assignAll(list);
+        });
+      } else {
+        favoriteIds.clear();
+      }
     });
   }
 
-  /// Firestore’dan mevcut favorileri okur
-  Future<void> _loadFavorites() async {
-    final doc = await _store.collection('users').doc(_uid).get();
-    final data = doc.data();
-    final List<dynamic>? list = data?['favorites'];
-    if (list != null) {
-      favorites.assignAll(list.cast<int>());
+  @override
+  void onClose() {
+    _sub?.cancel();
+    super.onClose();
+  }
+
+  /// Toggle favorite: ekle/çıkar ve Firestore’a yaz
+  Future<void> toggleFavorite(int id) async {
+    final isAdding = !favoriteIds.contains(id);
+    if (isAdding) {
+      favoriteIds.add(id);
     } else {
-      favorites.clear();
+      favoriteIds.remove(id);
     }
+    await _store
+        .collection('users')
+        .doc(_uid)
+        .set({'favorites': favoriteIds.toList()}, SetOptions(merge: true));
   }
 
-  /// Toggle et ve Firestore’a kaydet
-  Future<void> toggleFavorite(Product p) async {
-    final id = p.id;
-    if (favorites.contains(id)) favorites.remove(id);
-    else favorites.add(id);
-
-    await _store.collection('users').doc(_uid).set({
-      'favorites': favorites.toList(),
-    }, SetOptions(merge: true));
-  }
-
-  bool isFavorite(Product p) => favorites.contains(p.id);
+  bool isFavorite(int id) => favoriteIds.contains(id);
 }

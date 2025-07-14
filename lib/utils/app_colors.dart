@@ -2,30 +2,30 @@
 
 import 'package:flutter/material.dart';
 
-/// Uygulamanın renk paleti
+/// Uygulamanın renk paleti (Clean Commerce)
 class AppColors {
-  AppColors._(); // Instancelanmasın
+  AppColors._();
 
-  /// Ana vurgu rengi (butonlar, başlıklar vb.)
-  static const Color primary = Color(0xFF2196F3);
+  /// Ana vurgu rengi (Steel Blue)
+  static const Color primary = Color(0xFF4682B4);
 
-  /// İkinci vurgu rengi (secondary buttons vb.)
-  static const Color secondary = Color(0xFF90CAF9);
+  /// İkinci vurgu rengi (Cool Gray)
+  static const Color secondary = Color(0xFFD3D3D3);
 
-  /// Yardımcı vurgu rengi (accent, hata mesajı vb.)
-  static const Color accent = Color(0xFFFF9800);
+  /// Accent rengi (Mustard)
+  static const Color accent = Color(0xFFFFC107);
 
-  /// Çok açık bi ton — gradient’lerde üst kısım için
-  static const Color lightGradientTop = Color(0x332196F3);
+  /// Gradient üst — primary’nin %20 opak hâli
+  static const Color lightGradientTop = Color(0x334682B4);
 
-  /// Çok açık bi ton — gradient’lerde alt kısım için
-  static const Color lightGradientBottom = Color(0x3390CAF9);
+  /// Gradient alt — secondary’nin %20 opak hâli
+  static const Color lightGradientBottom = Color(0x20D3D3D3);
 
-  /// Koyu metin rengi (buton metinleri, başlıklar vb.)
-  static const Color textDark = Colors.black87;
+  /// Koyu metin rengi
+  static const Color textDark = Color(0xFF212121);
 
   /// Scaffold arkaplan rengi
-  static const Color scaffoldBg = Colors.white;
+  static const Color scaffoldBg = Color(0xFFFFFFFF);
 
   /// Hata rengi (snackbar vb.)
   static const Color error = Colors.redAccent;

@@ -1,90 +1,80 @@
-// lib/controllers/cart_controller.dart
-
+import 'dart:async';
+import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';      // ← Bunu ekleyin
-import 'package:get/get.dart'; // firstWhereOrNull için
-import 'package:storage/models/product_model.dart';
-
-import 'product_controller.dart';
-import 'auth_controller.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class CartController extends GetxController {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
-  final AuthController _authC = Get.find<AuthController>();
+  final _auth = FirebaseAuth.instance;
+  final _db   = FirebaseFirestore.instance;
 
-  /// Sepet: Product → miktar
-  final items = <Product,int>{}.obs;
+  /// id → adet tutan reaktif map
+  final RxMap<int,int> cart = <int,int>{}.obs;
+  StreamSubscription<DocumentSnapshot>? _sub;
 
-  late final ProductController _pc;
+  String get _uid => _auth.currentUser!.uid;
 
   @override
   void onInit() {
     super.onInit();
-    _pc = Get.find<ProductController>();
-
-    // Uygulama başlarken zaten login ise
-    if (_authC.user.value != null) {
-      _loadCartFromFirestore();
-    }
-
-    // Login/logout durum değişiminde yükle veya temizle
-    ever<User?>(_authC.user, (user) {
+    // Oturum değişimlerini dinle
+    _auth.authStateChanges().listen((user) {
+      _sub?.cancel();
       if (user != null) {
-        _loadCartFromFirestore();
+        // Kullanıcının dökümanını dinle
+        _sub = _db
+            .collection('users')
+            .doc(_uid)
+            .snapshots()
+            .listen((snap) {
+          final data = snap.data() as Map<String, dynamic>? ?? {};
+          final raw = Map<String, dynamic>.from(data['cart'] ?? {});
+          // string-key’leri int’e dönüştür
+          final restored = <int,int>{};
+          raw.forEach((k,v) {
+            final id = int.tryParse(k);
+            if (id != null) restored[id] = (v as num).toInt();
+          });
+          cart.assignAll(restored);
+        });
       } else {
-        items.clear();
+        cart.clear();
       }
     });
   }
 
-  /// Sepete ekle ve Firestore’a kaydet
-  Future<void> addToCart(Product p) async {
-    items[p] = (items[p] ?? 0) + 1;
-    await _saveCartToFirestore();
+  @override
+  void onClose() {
+    _sub?.cancel();
+    super.onClose();
   }
 
-  /// Sepetten çıkar ve Firestore’a kaydet
-  Future<void> removeFromCart(Product p) async {
-    if (!items.containsKey(p)) return;
-    final newQty = items[p]! - 1;
-    if (newQty > 0) {
-      items[p] = newQty;
+  /// Sepete ekle: id’ye +1, yoksa 1
+  Future<void> addToCart(int id) async {
+    cart.update(id, (q) => q + 1, ifAbsent: () => 1);
+    await _save();
+  }
+
+  /// Sepetten çıkar: id’nin adedini -1, 0 ise tamamen sil
+  Future<void> removeFromCart(int id) async {
+    if (!cart.containsKey(id)) return;
+    final q = cart[id]!;
+    if (q > 1) {
+      cart[id] = q - 1;
     } else {
-      items.remove(p);
+      cart.remove(id);
     }
-    await _saveCartToFirestore();
+    await _save();
   }
 
-  Future<void> _saveCartToFirestore() async {
-    final uid = _authC.user.value!.uid;
-    final cartMap = <String,int>{};
-    items.forEach((prod, qty) {
-      cartMap[prod.id.toString()] = qty;
-    });
+  /// Sepette var mı?
+  bool contains(int id) => cart.containsKey(id);
+
+  /// Firestore’a kaydet
+  Future<void> _save() async {
+    final map = { for (var e in cart.entries) e.key.toString(): e.value };
     await _db
         .collection('users')
-        .doc(uid)
-        .set({'cart': cartMap}, SetOptions(merge: true));
+        .doc(_uid)
+        .set({'cart': map}, SetOptions(merge: true));
   }
-
-  Future<void> _loadCartFromFirestore() async {
-    final uid = _authC.user.value!.uid;
-    final doc = await _db.collection('users').doc(uid).get();
-    if (!doc.exists) return;
-
-    final data = doc.data();
-    if (data == null || data['cart'] == null) return;
-    final raw = Map<String, dynamic>.from(data['cart']);
-
-    final restored = <Product,int>{};
-    raw.forEach((prodId, qty) {
-      final p = _pc.products.firstWhereOrNull((x) => x.id.toString() == prodId);
-      if (p != null) restored[p] = qty as int;
-    });
-
-    items.assignAll(restored);
-  }
-
-  double get totalPrice => items.entries
-      .fold(0.0, (sum, e) => sum + e.key.price * e.value);
 }

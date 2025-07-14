@@ -1,8 +1,9 @@
-// lib/pages/cart_page.dart
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import '../controllers/cart_controller.dart';
+import '../controllers/product_controller.dart';
+import 'package:storage/utils/app_colors.dart';
 
 class CartPage extends StatelessWidget {
   const CartPage({Key? key}) : super(key: key);
@@ -10,55 +11,51 @@ class CartPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cartC = Get.find<CartController>();
+    final pc    = Get.find<ProductController>();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Sepet')),
+      appBar: AppBar(
+        title: const Text('Sepet'),
+        backgroundColor: AppColors.primary,
+      ),
       body: Obx(() {
-        if (cartC.items.isEmpty) {
-          return const Center(child: Text('Sepetiniz boş'));
+        final entries = cartC.cart.entries.toList();
+        if (entries.isEmpty) {
+          return Center(child: Text('Sepetiniz boş', style: TextStyle(color: AppColors.textDark)));
         }
-        return Column(
-          children: [
-            Expanded(
-              child: ListView.builder(
-                itemCount: cartC.items.length,
-                itemBuilder: (_, idx) {
-                  final prod = cartC.items.keys.elementAt(idx);
-                  final qty  = cartC.items.values.elementAt(idx);
-                  return ListTile(
-                    leading: Image.network(prod.image, width: 50, height: 50),
-                    title: Text(prod.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-                    subtitle: Text('\$${prod.price.toStringAsFixed(2)} x $qty'),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.remove_circle_outline),
-                          onPressed: () => cartC.removeFromCart(prod),
-                        ),
-                        Text('$qty'),
-                        IconButton(
-                          icon: const Icon(Icons.add_circle_outline),
-                          onPressed: () => cartC.addToCart(prod),
-                        ),
-                      ],
-                    ),
-                  );
-                },
+        return ListView.builder(
+          itemCount: entries.length,
+          itemBuilder: (_, i) {
+            final id  = entries[i].key;
+            final qty = entries[i].value;
+            final p   = pc.products.firstWhere((x) => x.id == id);
+            return ListTile(
+              leading: Image.network(p.image, width: 50, height: 50, fit: BoxFit.cover),
+              title: Text(p.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+              subtitle: Text('Adet: $qty'),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(icon: const Icon(Icons.remove), onPressed: () => cartC.removeFromCart(id)),
+                  IconButton(icon: const Icon(Icons.add),    onPressed: () => cartC.addToCart(id)),
+                ],
               ),
-            ),
-
-            // Toplam fiyat
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Obx(() {
-                return Text(
-                  'Toplam: \$${cartC.totalPrice.toStringAsFixed(2)}',
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                );
-              }),
-            ),
-          ],
+            );
+          },
+        );
+      }),
+      bottomNavigationBar: Obx(() {
+        final total = cartC.cart.entries.fold<double>(0.0, (sum, e) {
+          final p = pc.products.firstWhere((x) => x.id == e.key);
+          return sum + p.price * e.value;
+        });
+        return Container(
+          color: Colors.white,
+          padding: const EdgeInsets.all(16),
+          child: Text(
+            'Toplam: \$${total.toStringAsFixed(2)}',
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
         );
       }),
     );

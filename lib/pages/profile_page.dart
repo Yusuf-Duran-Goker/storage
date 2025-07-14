@@ -1,5 +1,6 @@
-import 'dart:io';
+// lib/pages/profile_page.dart
 
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -10,7 +11,7 @@ class ProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pc = Get.put(ProfileController());
+    final pc = Get.find<ProfileController>();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Profil')),
@@ -19,11 +20,13 @@ class ProfilePage extends StatelessWidget {
         child: Column(
           children: [
             Obx(() {
-              final path = pc.imagePath.value;
+              final path = pc.imagePath.value;           // ← burayı imageUrl → imagePath yaptık
               return CircleAvatar(
                 radius: 60,
                 backgroundImage:
-                path != null ? FileImage(File(path)) : null,
+                path != null
+                    ? FileImage(File(path))
+                    : null,
                 child: path == null
                     ? const Icon(Icons.person, size: 60)
                     : null,
