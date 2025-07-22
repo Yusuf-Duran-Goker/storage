@@ -13,6 +13,7 @@ dependencies:
   # UI & State
   cupertino_icons: ^1.0.8
   get: ^4.7.2
+  get_storage: ^2.0.3           # ← ekledik
 
   # HTTP & Fotoğraf seçimi
   http: ^0.13.5
@@ -38,4 +39,9 @@ flutter:
   assets:
     - assets/anim/login_bg.json
     - assets/anim/register.json
-
+    - assets/anim/welcome.json
+    - assets/anim/cart.json
+    - assets/anim/star.json
+    - assets/anim/payment.json
+    - assets/anim/search.json
+    - assets/anim/notification.json
