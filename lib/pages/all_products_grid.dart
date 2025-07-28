@@ -1,123 +1,79 @@
 // lib/pages/all_products_grid.dart
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:storage/controllers/product_controller.dart';
-import 'package:storage/controllers/favorite_controller.dart';
-import 'package:storage/pages/product_detail_page.dart';  // detay sayfası importu
-import '../utils/app_colors.dart';
+import 'package:storage/models/product_model.dart';
+import 'package:storage/service/product_service.dart';
 
 class AllProductsGrid extends StatelessWidget {
-  const AllProductsGrid({super.key});
+  /// Eğer bir arama sorgusu geldiyse buradan okuyoruz.
+  final String? searchQuery;
+
+  const AllProductsGrid({
+    Key? key,
+    this.searchQuery,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final pc   = Get.find<ProductController>();
-    final favC = Get.find<FavoriteController>();
+    return FutureBuilder<List<Product>>(
+      future: ProductService().fetchProducts(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(child: Text('Hata: ${snapshot.error}'));
+        }
 
-    return Obx(() {
-      if (pc.isLoading.value) {
-        return const Center(child: CircularProgressIndicator());
-      }
-      if (pc.error.value.isNotEmpty) {
-        return Center(child: Text('Error: ${pc.error.value}'));
-      }
+        final allProducts = snapshot.data ?? [];
+        final products = (searchQuery?.isNotEmpty == true)
+            ? allProducts
+            .where((p) => p.title
+            .toLowerCase()
+            .contains(searchQuery!.toLowerCase()))
+            .toList()
+            : allProducts;
 
-      final allProducts = pc.products;
-      return GridView.builder(
-        padding: const EdgeInsets.all(8),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          childAspectRatio: 0.70,
-        ),
-        itemCount: allProducts.length,
-        itemBuilder: (context, i) {
-          final p = allProducts[i];
-          return GestureDetector(
-            onTap: () => Get.to(() => ProductDetailPage(product: p)),
-            child: Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              elevation: 4,
-              clipBehavior: Clip.antiAlias,
-              child: Stack(
+        if (products.isEmpty) {
+          return const Center(child: Text('No products found.'));
+        }
+
+        return GridView.builder(
+          padding: const EdgeInsets.all(8),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            childAspectRatio: 0.75,
+            crossAxisSpacing: 8,
+            mainAxisSpacing: 8,
+          ),
+          itemCount: products.length,
+          itemBuilder: (context, i) {
+            final product = products[i];
+            return Card(
+              child: Column(
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      AspectRatio(
-                        aspectRatio: 1,
-                        child: Image.network(p.image, fit: BoxFit.cover),
-                      ),
-                      const SizedBox(height: 6),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 6),
-                        child: Text(
-                          p.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        child: Text(
-                          p.category,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 12, color: Colors.grey.shade600,
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                        child: Text(
-                          '\$${p.price.toStringAsFixed(2)}',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ),
-                    ],
+                  Expanded(
+                    child: Image.network(
+                      product.image,
+                      fit: BoxFit.cover,
+                    ),
                   ),
-                  Positioned(
-                    top: 6,
-                    right: 6,
-                    child: Obx(() => InkWell(
-                      onTap: () => favC.toggleFavorite(p.id),
-                      borderRadius: BorderRadius.circular(20),
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.9),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          favC.isFavorite(p.id)
-                              ? Icons.favorite
-                              : Icons.favorite_border,
-                          size: 16,
-                          color: favC.isFavorite(p.id)
-                              ? Colors.red
-                              : Colors.grey.shade600,
-                        ),
-                      ),
-                    )),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Text(
+                      product.title,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
+                  Text('\$${product.price.toStringAsFixed(2)}'),
                 ],
               ),
-            ),
-          );
-        },
-      );
-    });
+            );
+          },
+        );
+      },
+    );
   }
 }

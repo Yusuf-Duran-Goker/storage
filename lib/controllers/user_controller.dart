@@ -20,10 +20,14 @@ class UserController extends GetxController {
   /// Fotoğraf yükleme durumunu tutar
   RxBool isUploadingPhoto = false.obs;
 
+  /// UI’da kullanmak üzere kolaylaştırılmış getter’lar
+  String get displayName => profile.value?['firstName'] as String? ?? 'Guest';
+  String? get photoUrl    => profile.value?['photoUrl'] as String?;
+
   @override
   void onInit() {
     super.onInit();
-    // Bind auth state
+    // Auth durumunu dinle
     firebaseUser.bindStream(_auth.authStateChanges());
     firebaseUser.listen((u) {
       if (u != null) {
@@ -40,6 +44,7 @@ class UserController extends GetxController {
     });
   }
 
+  /// Genel profil güncelleme (firstName, age, gender)
   Future<void> updateProfile({
     String? firstName,
     int? age,
@@ -49,10 +54,16 @@ class UserController extends GetxController {
     if (uid == null) return;
     final data = <String, dynamic>{};
     if (firstName != null) data['firstName'] = firstName;
-    if (age != null)       data['age']       = age;
-    if (gender != null)    data['gender']    = gender;
+    if (age       != null) data['age']       = age;
+    if (gender    != null) data['gender']    = gender;
     if (data.isEmpty) return;
-    await _db.collection('users').doc(uid).set(data, SetOptions(merge: true));
+    await _db.collection('users').doc(uid)
+        .set(data, SetOptions(merge: true));
+  }
+
+  /// Sadece adı güncellemek istersen
+  Future<void> updateFirstName(String name) async {
+    await updateProfile(firstName: name);
   }
 
   /// Galeriden seçim yapıp Storage’a yükler, Firestore’a URL kaydeder
@@ -71,27 +82,23 @@ class UserController extends GetxController {
         return;
       }
 
-      // 2) Storage yolunu oluştur (çakışmayı önlemek için timestamp ekliyoruz)
+      // 2) Storage yolunu oluştur
       final filename = '${DateTime.now().millisecondsSinceEpoch}.jpg';
       final path     = 'users/$uid/$filename';
       final ref      = _storage.ref().child(path);
 
       // 3) Yükleme
       final uploadTask = ref.putFile(File(file.path));
-      // (isteğe bağlı: ilerleme dinlemek istersen uploadTask.snapshotEvents)
-
       await uploadTask;
 
-      // 4) İndirme URL’si al ve Firestore’a kaydet
+      // 4) URL al & Firestore’a kaydet
       final url = await ref.getDownloadURL();
       await _db.collection('users').doc(uid)
           .set({'photoUrl': url}, SetOptions(merge: true));
 
-      // 5) Başarı mesajı
       Get.snackbar('Başarılı', 'Profil fotoğrafı güncellendi',
           snackPosition: SnackPosition.BOTTOM);
     } catch (e) {
-      // Hata mesajı
       Get.snackbar('Hata', 'Fotoğraf yüklenemedi: $e',
           backgroundColor: Colors.redAccent,
           colorText: Colors.white,

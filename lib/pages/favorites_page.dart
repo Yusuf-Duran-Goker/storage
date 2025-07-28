@@ -1,22 +1,16 @@
-// lib/pages/favorites_page.dart
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controllers/auth_controller.dart';
 import '../controllers/product_controller.dart';
-import '../controllers/cart_controller.dart';
 import '../controllers/favorite_controller.dart';
 import '../utils/app_colors.dart';
 
 class FavoritesPage extends StatelessWidget {
-  const FavoritesPage({super.key});
+  const FavoritesPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final authC = Get.find<AuthController>();
-    final pc    = Get.find<ProductController>();
-    final favC  = Get.find<FavoriteController>();
-    final cartC = Get.find<CartController>();
+    final pc   = Get.find<ProductController>();
+    final favC = Get.find<FavoriteController>();
 
     return Scaffold(
       appBar: AppBar(
@@ -25,15 +19,16 @@ class FavoritesPage extends StatelessWidget {
         backgroundColor: AppColors.primary,
         elevation: 0,
       ),
-
-      // Drawer kaldırıldı, doğrudan body gösteriliyor
       body: Obx(() {
         final favIds = favC.favoriteIds;
         final favProducts = pc.products.where((p) => favIds.contains(p.id)).toList();
 
         if (favProducts.isEmpty) {
           return Center(
-            child: Text('Henüz favori yok', style: TextStyle(color: AppColors.textDark)),
+            child: Text(
+              'Henüz favori yok',
+              style: TextStyle(color: AppColors.textDark),
+            ),
           );
         }
 
@@ -53,7 +48,12 @@ class FavoritesPage extends StatelessWidget {
                   children: [
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: Image.network(p.image, width: 60, height: 60, fit: BoxFit.cover),
+                      child: Image.network(
+                        p.image,
+                        width: 60,
+                        height: 60,
+                        fit: BoxFit.cover,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -67,7 +67,10 @@ class FavoritesPage extends StatelessWidget {
                             style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
                           const SizedBox(height: 4),
-                          Text('\$${p.price.toStringAsFixed(2)}', style: const TextStyle(color: Colors.green)),
+                          Text(
+                            '\$${p.price.toStringAsFixed(2)}',
+                            style: const TextStyle(color: Colors.green),
+                          ),
                         ],
                       ),
                     ),
