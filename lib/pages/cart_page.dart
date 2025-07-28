@@ -6,7 +6,7 @@ import '../controllers/product_controller.dart';
 import 'package:storage/utils/app_colors.dart';
 
 class CartPage extends StatelessWidget {
-  const CartPage({Key? key}) : super(key: key);
+  const CartPage({super.key});
 
   @override
   Widget build(BuildContext context) {

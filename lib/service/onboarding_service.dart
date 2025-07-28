@@ -1,53 +1,41 @@
 // lib/service/onboarding_service.dart
 
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class OnboardingService {
-  String _seenKey(String uid) => 'seen_onboarding_$uid';
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  /// Daha önce bu kullanıcı için onboarding gösterildi mi?
+  /// Firestore’dan kontrol ederek kullanıcının onboarding’i tamamlayıp tamamlamadığını döner
   Future<bool> hasSeenOnboarding() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return true;
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_seenKey(uid)) ?? false;
+    final user = _auth.currentUser;
+    if (user == null) return true;
+    final doc = await _db.collection('users').doc(user.uid).get();
+    final data = doc.data();
+    return data?['onboardingDone'] == true;
   }
 
-  /// Bu kullanıcı için onboarding görüldü olarak işaretle
+  /// Firestore’da kullanıcı dokümanına onboardingDone=true yazar
   Future<void> markOnboardingSeen() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_seenKey(uid), true);
-  }
-
-  /// Yaş ve cinsiyeti Firestore’a kaydet
-  Future<void> saveAgeAndGender(int age, String gender) async {
-    final user = FirebaseAuth.instance.currentUser;
+    final user = _auth.currentUser;
     if (user == null) return;
-    await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .set({
-      'age': age,
-      'gender': gender,
-    }, SetOptions(merge: true));
+    await _db.collection('users').doc(user.uid).set(
+      {'onboardingDone': true},
+      SetOptions(merge: true),
+    );
   }
 
-  /// Onboarding boyunca seçilen verileri Firestore’a kaydet
+  /// Yaş, cinsiyet ve ilgi alanlarını Firestore’a kaydeder
   Future<void> saveOnboardingData({
     required int age,
     required String gender,
     required List<String> interests,
   }) async {
-    final user = FirebaseAuth.instance.currentUser;
+    final user = _auth.currentUser;
     if (user == null) return;
-    await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .set({
+    final docRef = _db.collection('users').doc(user.uid);
+    await docRef.set({
       'age': age,
       'gender': gender,
       'interests': interests,

@@ -26,7 +26,7 @@ class FavoriteController extends GetxController {
             .doc(_uid)
             .snapshots()
             .listen((snap) {
-          final data = snap.data() as Map<String, dynamic>? ?? {};
+          final data = snap.data() ?? {};
           final list = (data['favorites'] as List<dynamic>?)?.cast<int>() ?? [];
           favoriteIds.assignAll(list);
         });

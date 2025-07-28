@@ -26,7 +26,7 @@ class CartController extends GetxController {
             .doc(_uid)
             .snapshots()
             .listen((snap) {
-          final data = snap.data() as Map<String, dynamic>? ?? {};
+          final data = snap.data() ?? {};
           final raw = Map<String, dynamic>.from(data['cart'] ?? {});
           // string-key’leri int’e dönüştür
           final restored = <int,int>{};

@@ -13,7 +13,7 @@ dependencies:
   # UI & State
   cupertino_icons: ^1.0.8
   get: ^4.7.2
-  get_storage: ^2.0.3           # ← ekledik
+  get_storage: ^2.0.3
 
   # HTTP & Fotoğraf seçimi
   http: ^0.13.5
@@ -28,6 +28,8 @@ dependencies:
   firebase_auth: ^5.6.1
   cloud_firestore: ^5.6.10
   firebase_storage: ^12.4.8
+  video_player: ^2.10.0
+  chewie: ^1.12.1
 
 dev_dependencies:
   flutter_test:
@@ -45,3 +47,7 @@ flutter:
     - assets/anim/payment.json
     - assets/anim/search.json
     - assets/anim/notification.json
+    - assets/video/video3.mp4
+    - assets/video/video2.mp4
+    - assets/video/video1.mp4
+    - assets/video/video4.mp4

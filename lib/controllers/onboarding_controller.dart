@@ -3,8 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../models/onboarding_model.dart';
+import '../pages/main_page.dart';         // MainPage import
 import '../service/onboarding_service.dart';
-import '../pages/product_list_page.dart';
 
 class OnboardingController extends GetxController {
   // 1) Mevcut sayfalar
@@ -17,7 +17,7 @@ class OnboardingController extends GetxController {
     OnboardingPage(
       title: 'Yaş & Cinsiyet',
       description: 'Lütfen yaşınızı ve cinsiyetinizi seçin.',
-      lottieAsset: 'assets/anim/profile.json', // (sonradan ekleyeceğin asset)
+      lottieAsset: 'assets/anim/profile.json',
     ),
     OnboardingPage(
       title: 'Sepetiniz',
@@ -51,11 +51,8 @@ class OnboardingController extends GetxController {
   final pageController = PageController();
 
   // 3) Kullanıcının seçimlerini tutacak reaktif listeler:
-  /// Yaş seçimi için bir int
   final selectedAge    = 18.obs;
-  /// Cinsiyet seçimi için bir enum ya da string
   final selectedGender = ''.obs;
-  /// İlgi alanı kategorileri
   final selectedCategories = <String>[].obs;
 
   // 4) OnboardingService (seen + interests kaydetmek için)
@@ -87,13 +84,18 @@ class OnboardingController extends GetxController {
   Future<void> finish() async {
     // 1) Seen flag’ini işaretle
     await _service.markOnboardingSeen();
-    // 2) Seçimleri Firestore’a kaydet
-    await _service.saveOnboardingData(
-      age: selectedAge.value,
-      gender: selectedGender.value,
-      interests: selectedCategories.toList(),
-    );
-    // 3) Ana sayfaya geç
-    Get.offAll(() => const ProductListPage());
+    // 2) Seçimleri Firestore’a kaydet (hata yakalama ekledik)
+    try {
+      await _service.saveOnboardingData(
+        age: selectedAge.value,
+        gender: selectedGender.value,
+        interests: selectedCategories.toList(),
+      );
+    } catch (e) {
+      // Hata durumunda log veya kullanıcıya bildirim ekleyebilirsiniz
+      debugPrint('Onboarding save error: \$e');
+    }
+    // 3) Ana sayfaya (alt menülü MainPage) geç
+    Get.offAll(() => const MainPage());
   }
 }

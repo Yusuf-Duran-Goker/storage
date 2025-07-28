@@ -17,7 +17,7 @@ class ReactBdProductService {
 
     // 1) JSON doğrudan liste ise
     if (jsonBody is List) {
-      return (jsonBody as List)
+      return (jsonBody)
           .map((e) => Product.fromJson(e as Map<String, dynamic>))
           .toList();
     }

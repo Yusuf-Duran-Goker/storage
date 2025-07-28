@@ -8,7 +8,7 @@ import '../controllers/product_controller.dart';
 import '../utils/app_colors.dart';
 
 class OnboardingCategoriesPage extends StatelessWidget {
-  const OnboardingCategoriesPage({Key? key}) : super(key: key);
+  const OnboardingCategoriesPage({super.key});
 
   @override
   Widget build(BuildContext context) {

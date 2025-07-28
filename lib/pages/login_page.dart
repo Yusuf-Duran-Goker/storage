@@ -9,12 +9,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../service/onboarding_service.dart';
 import '../controllers/auth_controller.dart';
 import 'onboarding_screen.dart';
-import 'product_list_page.dart';
 import 'register_page.dart';
+import 'main_page.dart';  // MainPage import
 import '../utils/app_colors.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({Key? key}) : super(key: key);
+  const LoginPage({super.key});
   @override
   State<LoginPage> createState() => _LoginPageState();
 }
@@ -47,18 +47,12 @@ class _LoginPageState extends State<LoginPage>
 
   Future<void> _onLoginPressed() async {
     try {
-      // 1) Firebase ile login
       await authC.login(emailCtrl.text.trim(), passwordCtrl.text);
-
-      // 2) Onboarding’i kullanıcı bazlı kontrol et
       final seen = await onboarding.hasSeenOnboarding();
-
       if (!seen) {
-        // İlk defa: onboarding ekranına git
         Get.offAll(() => const OnboardingScreen());
       } else {
-        // Daha önce gördüyse ana sayfaya
-        Get.offAll(() => const ProductListPage());
+        Get.offAll(() => const MainPage());
       }
     } on FirebaseAuthException {
       Get.snackbar(
@@ -74,7 +68,6 @@ class _LoginPageState extends State<LoginPage>
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: AnnotatedRegion<SystemUiOverlayStyle>(
@@ -82,7 +75,7 @@ class _LoginPageState extends State<LoginPage>
         child: Stack(
           fit: StackFit.expand,
           children: [
-            // 1) Gradient arka plan
+            // Gradient background
             Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
@@ -92,8 +85,7 @@ class _LoginPageState extends State<LoginPage>
                 ),
               ),
             ),
-
-            // 2) Lottie animasyon
+            // Lottie animation
             Positioned(
               top: size.height * 0.12,
               left: 0,
@@ -105,8 +97,7 @@ class _LoginPageState extends State<LoginPage>
                 controller: _anim,
               ),
             ),
-
-            // 3) Şeffaf overlay
+            // Overlay
             Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
@@ -119,8 +110,7 @@ class _LoginPageState extends State<LoginPage>
                 ),
               ),
             ),
-
-            // 4) Form kartı
+            // Login form
             Positioned(
               top: size.height * 0.48,
               left: 24,
@@ -139,7 +129,6 @@ class _LoginPageState extends State<LoginPage>
                   ],
                 ),
                 child: Column(mainAxisSize: MainAxisSize.min, children: [
-                  // Başlık
                   RichText(
                     text: TextSpan(children: [
                       TextSpan(
@@ -160,10 +149,7 @@ class _LoginPageState extends State<LoginPage>
                       ),
                     ]),
                   ),
-
                   const SizedBox(height: 32),
-
-                  // Email
                   TextField(
                     controller: emailCtrl,
                     keyboardType: TextInputType.emailAddress,
@@ -178,8 +164,6 @@ class _LoginPageState extends State<LoginPage>
                     ),
                   ),
                   const SizedBox(height: 16),
-
-                  // Password
                   TextField(
                     controller: passwordCtrl,
                     obscureText: true,
@@ -194,14 +178,13 @@ class _LoginPageState extends State<LoginPage>
                     ),
                   ),
                   const SizedBox(height: 24),
-
-                  // Login butonu
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: buttonColor,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        padding:
+                        const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -214,14 +197,13 @@ class _LoginPageState extends State<LoginPage>
                     ),
                   ),
                   const SizedBox(height: 12),
-
-                  // Register butonu
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: buttonColor,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        padding:
+                        const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),

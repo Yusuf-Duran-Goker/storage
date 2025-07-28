@@ -10,7 +10,7 @@ import 'login_page.dart';
 import 'package:storage/utils/app_colors.dart';
 
 class RegisterPage extends StatefulWidget {
-  const RegisterPage({Key? key}) : super(key: key);
+  const RegisterPage({super.key});
   @override
   State<RegisterPage> createState() => _RegisterPageState();
 }
