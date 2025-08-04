@@ -1,5 +1,3 @@
-// lib/pages/product_detail_page.dart
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:storage/controllers/cart_controller.dart';
@@ -25,7 +23,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   @override
   void initState() {
     super.initState();
-    // Sepetteki mevcut adeti oku; yoksa 1 olarak başlat
     final existing = cartC.cart[widget.product.id] ?? 0;
     _quantity = existing > 0 ? existing : 1;
   }
@@ -41,7 +38,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         decoration: BoxDecoration(
           color: color,
           shape: BoxShape.circle,
-          border: isSelected ? Border.all(color: AppColors.accent, width: 2) : null,
+          border: isSelected
+              ? Border.all(color: AppColors.accent, width: 2)
+              : null,
         ),
       ),
     );
@@ -53,21 +52,41 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Get.back(),
+        ),
+      ),
       body: Stack(
         children: [
-          // Arkadaki tam ekran ürün görseli
-          Positioned.fill(
-            child: Image.network(product.image, fit: BoxFit.cover),
-          ),
-
-          // Geri tuşu
           Positioned(
-            top: MediaQuery.of(context).padding.top + 8,
-            left: 16,
-            child: BackButton(color: Colors.white),
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: MediaQuery.of(context).size.height * 0.4,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(24),
+                  bottomRight: Radius.circular(24),
+                ),
+              ),
+              child: ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(24),
+                  bottomRight: Radius.circular(24),
+                ),
+                child: Image.network(
+                  product.image,
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
           ),
-
-          // Favori ikonu
           Positioned(
             top: MediaQuery.of(context).padding.top + 8,
             right: 16,
@@ -92,8 +111,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               ),
             )),
           ),
-
-          // Alt panel (“sheet”)
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
@@ -106,29 +123,23 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Başlık
                   Text(
                     product.title,
                     style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 4),
-
-                  // Fiyat
                   Text(
                     '\$${product.price.toStringAsFixed(2)}',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
+                      color: Colors.green, // Yeşil olarak güncellendi
                     ),
                   ),
                   const SizedBox(height: 12),
-
-                  // Değerlendirme ve adet seçici
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Yıldız ve yorum
                       Row(
                         children: const [
                           Icon(Icons.star, color: Colors.amber, size: 20),
@@ -136,7 +147,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           Text('4.8 (320)', style: TextStyle(fontSize: 14)),
                         ],
                       ),
-                      // Adet seçici
                       Row(
                         children: [
                           IconButton(
@@ -155,8 +165,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     ],
                   ),
                   const SizedBox(height: 12),
-
-                  // Renk seçenekleri
                   const Text('Color', style: TextStyle(fontWeight: FontWeight.w600)),
                   const SizedBox(height: 8),
                   Row(
@@ -168,8 +176,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     ],
                   ),
                   const SizedBox(height: 16),
-
-                  // Açıklama
                   const Text('Description', style: TextStyle(fontWeight: FontWeight.w600)),
                   const SizedBox(height: 6),
                   Expanded(
@@ -180,8 +186,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       ),
                     ),
                   ),
-
-                  // Add to Cart butonu: seçilmiş adeti sepete uygula
                   Obx(() {
                     final inCart = cartC.cart[product.id] ?? 0;
                     return ElevatedButton.icon(
@@ -197,14 +201,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                         }
                       },
                       icon: const Icon(Icons.shopping_cart, color: Colors.white),
-                      label: Text('Add $_quantity to Cart',
-                          style: const TextStyle(color: Colors.white)),
+                      label: Text('Add $_quantity to Cart', style: const TextStyle(color: Colors.white)),
                       style: ElevatedButton.styleFrom(
                         minimumSize: const Size.fromHeight(50),
                         backgroundColor: AppColors.primary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                     );
                   }),

@@ -1,8 +1,8 @@
-// lib/pages/edit_profile_page.dart
-
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:storage/controllers/user_controller.dart';
+import 'package:image_picker/image_picker.dart';
+import '../controllers/user_controller.dart';
 import '../utils/app_colors.dart';
 
 class EditProfilePage extends StatefulWidget {
@@ -14,93 +14,202 @@ class EditProfilePage extends StatefulWidget {
 
 class _EditProfilePageState extends State<EditProfilePage> {
   final userC = Get.find<UserController>();
-  final _formKey = GlobalKey<FormState>();
+  final ImagePicker _picker = ImagePicker();
 
-  late TextEditingController _nameCtrl;
-  late TextEditingController _ageCtrl;
-  String _gender = '';
+  File? _pickedImage;
+  String? _currentPhotoUrl;
+
+  late TextEditingController nameController;
+  late TextEditingController ageController;
+  late TextEditingController emailController;
+  String selectedGender = 'Kadın';
 
   @override
   void initState() {
     super.initState();
-    final data = userC.profile.value ?? {};
-    _nameCtrl = TextEditingController(text: data['firstName'] as String? ?? '');
-    _ageCtrl = TextEditingController(text: (data['age']?.toString() ?? ''));
-    _gender = data['gender'] as String? ?? '';
+    final profile = userC.profile.value ?? {};
+    nameController = TextEditingController(text: profile['firstName'] ?? '');
+    ageController = TextEditingController(text: (profile['age'] ?? '').toString());
+    emailController = TextEditingController(text: profile['email'] ?? '');
+    selectedGender = profile['gender'] ?? 'Kadın';
+    _currentPhotoUrl = profile['photoUrl'] as String?;
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    ageController.dispose();
+    emailController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickAndUploadImage() async {
+    try {
+      final XFile? file = await _picker.pickImage(source: ImageSource.gallery);
+      if (file != null) {
+        // Kullanıcı kodunuzda zaten galeriden seçip yükleme yapan metod var
+        await userC.pickAndUploadPhoto();
+        setState(() => _currentPhotoUrl = userC.photoUrl);
+      }
+    } catch (e) {
+      Get.snackbar('Hata', 'Fotoğraf yüklenirken sorun oluştu');
+    }
+  }
+
+  Future<void> _saveProfile() async {
+    final name = nameController.text.trim();
+    final age = int.tryParse(ageController.text.trim());
+    final email = emailController.text.trim();
+    if (name.isEmpty || age == null || email.isEmpty) {
+      Get.snackbar('Hata', 'Lütfen tüm alanları doğru doldurun');
+      return;
+    }
+    await userC.updateProfile(
+      firstName: name,
+      age: age,
+      gender: selectedGender,
+      email: email,
+      photoUrl: _currentPhotoUrl,
+    );
+    Get.back();
+    Get.snackbar('Başarılı', 'Profil güncellendi');
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Edit Profile')),
-      body: SingleChildScrollView(
+      appBar: AppBar(title: const Text('Profili Düzenle')),
+      backgroundColor: AppColors.scaffoldBg,
+      body: Padding(
         padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              GestureDetector(
-                onTap: () => userC.pickAndUploadPhoto(),
-                child: CircleAvatar(
-                  radius: 60,
-                  backgroundImage: userC.profile.value?['photoUrl'] != null
-                      ? NetworkImage(userC.profile.value!['photoUrl'])
-                      : null,
-                  backgroundColor: AppColors.primary.withOpacity(0.5),
-                  child: userC.profile.value?['photoUrl'] == null
-                      ? const Icon(Icons.camera_alt,
-                      size: 40, color: Colors.white)
-                      : null,
+        child: ListView(
+          children: [
+            Center(
+              child: Stack(
+                alignment: Alignment.bottomRight,
+                children: [
+                  CircleAvatar(
+                    radius: 60,
+                    backgroundColor: Colors.grey.shade200,
+                    backgroundImage: _pickedImage != null
+                        ? FileImage(_pickedImage!) as ImageProvider
+                        : (_currentPhotoUrl != null
+                        ? NetworkImage(_currentPhotoUrl!)
+                        : null),
+                    child: (_pickedImage == null && _currentPhotoUrl == null)
+                        ? const Icon(Icons.person, size: 60, color: Colors.grey)
+                        : null,
+                  ),
+                  Positioned(
+                    child: InkWell(
+                      onTap: _pickAndUploadImage,
+                      borderRadius: BorderRadius.circular(30),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.camera_alt, size: 24),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // İsim
+            Card(
+              color: AppColors.secondary,
+              elevation: 4,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              child: TextField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  prefixIcon: Icon(Icons.person, color: AppColors.primary),
+                  hintText: 'İsim',
                 ),
               ),
-              const SizedBox(height: 24),
-              TextFormField(
-                controller: _nameCtrl,
-                decoration: const InputDecoration(labelText: 'Username'),
-                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _ageCtrl,
-                decoration: const InputDecoration(labelText: 'Age'),
+            ),
+
+            // Yaş
+            Card(
+              color: AppColors.secondary,
+              elevation: 4,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              child: TextField(
+                controller: ageController,
                 keyboardType: TextInputType.number,
-                validator: (v) => v == null || int.tryParse(v) == null
-                    ? 'Enter valid age'
-                    : null,
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: _gender.isEmpty ? null : _gender,
-                decoration: const InputDecoration(labelText: 'Gender'),
-                items: ['Erkek', 'Kadın', 'Diğer']
-                    .map((g) => DropdownMenuItem(
-                  value: g,
-                  child: Text(g),
-                ))
-                    .toList(),
-                onChanged: (v) => setState(() => _gender = v!),
-                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
-              ),
-              const SizedBox(height: 32),
-              ElevatedButton(
-                onPressed: () async {
-                  if (_formKey.currentState?.validate() ?? false) {
-                    await userC.updateProfile(
-                      firstName: _nameCtrl.text.trim(),
-                      age: int.parse(_ageCtrl.text.trim()),
-                      gender: _gender,
-                    );
-                    Get.back();
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(48),
-                  backgroundColor: AppColors.primary,
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  prefixIcon: Icon(Icons.cake, color: AppColors.primary),
+                  hintText: 'Yaş',
                 ),
-                child: const Text('Save Changes'),
               ),
-            ],
-          ),
+            ),
+
+            // E-posta
+            Card(
+              color: AppColors.secondary,
+              elevation: 4,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              child: TextField(
+                controller: emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  prefixIcon: Icon(Icons.email, color: AppColors.primary),
+                  hintText: 'E-posta',
+                ),
+              ),
+            ),
+
+            // Cinsiyet
+            Card(
+              color: AppColors.secondary,
+              elevation: 4,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              child: DropdownButtonFormField<String>(
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  prefixIcon: Icon(Icons.wc, color: AppColors.primary),
+                  hintText: 'Cinsiyet',
+                ),
+                value: selectedGender,
+                items: const [
+                  DropdownMenuItem(value: 'Kadın', child: Text('Kadın')),
+                  DropdownMenuItem(value: 'Erkek', child: Text('Erkek')),
+                  DropdownMenuItem(value: 'Diğer', child: Text('Diğer')),
+                ],
+                onChanged: (val) {
+                  if (val != null) setState(() => selectedGender = val);
+                },
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: ElevatedButton.icon(
+                onPressed: _saveProfile,
+                icon: const Icon(Icons.save),
+                label: const Text('Kaydet'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: AppColors.scaffoldBg,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  minimumSize: const Size.fromHeight(50),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

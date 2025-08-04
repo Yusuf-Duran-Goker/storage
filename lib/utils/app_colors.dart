@@ -2,24 +2,24 @@
 
 import 'package:flutter/material.dart';
 
-/// Uygulamanın renk paleti (Clean Commerce)
+/// Uygulamanın renk paleti (Trendyol × Temu)
 class AppColors {
   AppColors._();
 
-  /// Ana vurgu rengi (Steel Blue)
-  static const Color primary = Color(0xFF4682B4);
+  /// Trendyol Turuncusu
+  static const Color primary = Color(0xFFFF6D00);
 
-  /// İkinci vurgu rengi (Cool Gray)
-  static const Color secondary = Color(0xFFD3D3D3);
+  /// Yüzey rengi (kart, panel arkaplanı)
+  static const Color secondary = Color(0xFFF5F5F5);
 
-  /// Accent rengi (Mustard)
-  static const Color accent = Color(0xFFFFC107);
+  /// Temu Kırmızısı (vurgular, seçili durumlar)
+  static const Color accent = Color(0xFFFF2100);
 
   /// Gradient üst — primary’nin %20 opak hâli
-  static const Color lightGradientTop = Color(0x334682B4);
+  static const Color lightGradientTop = Color(0x33FF6D00);
 
-  /// Gradient alt — secondary’nin %20 opak hâli
-  static const Color lightGradientBottom = Color(0x20D3D3D3);
+  /// Gradient alt — accent’in %20 opak hâli
+  static const Color lightGradientBottom = Color(0x33FF2100);
 
   /// Koyu metin rengi
   static const Color textDark = Color(0xFF212121);

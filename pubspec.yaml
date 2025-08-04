@@ -15,6 +15,7 @@ dependencies:
   get: ^4.7.2
   get_storage: ^2.0.3
 
+
   # HTTP & Fotoğraf seçimi
   http: ^0.13.5
   image_picker: ^0.8.7+4
@@ -30,6 +31,7 @@ dependencies:
   firebase_storage: ^12.4.8
   video_player: ^2.10.0
   chewie: ^1.12.1
+  u_credit_card: ^1.4.0
 
 dev_dependencies:
   flutter_test:
@@ -47,7 +49,4 @@ flutter:
     - assets/anim/payment.json
     - assets/anim/search.json
     - assets/anim/notification.json
-    - assets/video/video3.mp4
-    - assets/video/video2.mp4
-    - assets/video/video1.mp4
-    - assets/video/video4.mp4
+

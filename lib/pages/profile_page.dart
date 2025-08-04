@@ -2,131 +2,127 @@
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controllers/user_controller.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../controllers/lang_controller.dart';
+import '../controllers/auth_controller.dart';
+import 'cards_credit _page.dart';
+import 'video_uploader_view.dart';
+import 'profile_detail_page.dart';
 import 'edit_profile_page.dart';
+import 'language_settings_page.dart';
+import 'orders_page.dart';
+
+import 'saved_cards_page.dart';  // ← Yeni eklenen import
 import '../utils/app_colors.dart';
 
 class ProfilePage extends StatelessWidget {
-  const ProfilePage({super.key});
+  const ProfilePage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final userC = Get.find<UserController>();
+    final user = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Profile'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () => Get.to(() => const EditProfilePage()),
+        title: const Text('Profil'),
+        backgroundColor: AppColors.primary,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          const Text(
+            'Kişisel Bilgiler',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          ListTile(
+            leading: const Icon(Icons.info_outline),
+            title: const Text('Profil'),
+            subtitle: const Text('Profil bilgilerini görüntüle'),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () => Get.to(() => const ProfileDetailPage()),
+          ),
+          const SizedBox(height: 8),
+          ListTile(
+            leading: const Icon(Icons.edit),
+            title: const Text('Profil Düzenle'),
+            subtitle: const Text('Profil bilgilerini düzenle'),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () => Get.to(() => const EditProfilePage()),
+          ),
+          const SizedBox(height: 8),
+          ListTile(
+            leading: const Icon(Icons.receipt_long),
+            title: const Text('Siparişlerim'),
+            subtitle: const Text('Geçmiş siparişlerinizi görüntüleyin'),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () => Get.to(() => const OrdersPage()),
+          ),
+          const SizedBox(height: 8),
+          // Yeni eklenen bölümler:
+          ListTile(
+            leading: const Icon(Icons.add_card),
+            title: const Text('Kart Ekle'),
+            subtitle: const Text('Yeni kart ekleyin'),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () => Get.to(() => const CardsCreditPage()),
+          ),
+          const SizedBox(height: 8),
+          ListTile(
+            leading: const Icon(Icons.credit_card),
+            title: const Text('Kayıtlı Kartlarım'),
+            subtitle: const Text('Eklediğiniz kartları görüntüleyin'),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () => Get.to(() => const SavedCardsPage()),
+          ),
+          const SizedBox(height: 24),
+          const VideoUploaderView(),
+          const SizedBox(height: 24),
+          Obx(() {
+            final langC = Get.find<LangController>();
+            final locale = langC.locale.value;
+            return ListTile(
+              leading: const Icon(Icons.language),
+              title: const Text('Dil'),
+              subtitle: Text(locale.languageCode == 'tr' ? 'Türkçe' : 'English'),
+            );
+          }),
+          const SizedBox(height: 24),
+          const Text(
+            'Ayarlar',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          ExpansionTile(
+            leading: const Icon(Icons.settings),
+            title: const Text('Genel Ayarlar'),
+            children: [
+              ListTile(
+                leading: const Icon(Icons.language),
+                title: const Text('Dil Seçimi'),
+                onTap: () => Get.to(() => const LanguageSettingsPage()),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            icon: const Icon(Icons.logout),
+            label: const Text('Çıkış Yap'),
+            onPressed: () async {
+              await Get.find<AuthController>().signOut();
+              Get.offAllNamed('/login');
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              minimumSize: const Size.fromHeight(50),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
           ),
         ],
       ),
-      body: Obx(() {
-        final data = userC.profile.value;
-        if (data == null) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        final name = data['firstName'] as String? ?? '';
-        final email = data['email'] as String? ?? '';
-        final age = data['age']?.toString() ?? '';
-        final gender = data['gender'] as String? ?? '';
-        final photoUrl = data['photoUrl'] as String?;
-
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  GestureDetector(
-                    onTap: () async {
-                      final confirm = await showDialog<bool>(
-                        context: context,
-                        builder: (ctx) => AlertDialog(
-                          title: const Text('Profil Fotoğrafı'),
-                          content: const Text('Profil fotoğrafını güncellemek ister misiniz?'),
-                          actions: [
-                            TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Hayır')),
-                            TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Evet')),
-                          ],
-                        ),
-                      );
-                      if (confirm == true) {
-                        userC.pickAndUploadPhoto();
-                      }
-                    },
-                    child: CircleAvatar(
-                      radius: 60,
-                      backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
-                      backgroundColor: AppColors.primary.withOpacity(0.5),
-                      child: photoUrl == null ? const Icon(Icons.person, size: 60, color: Colors.white) : null,
-                    ),
-                  ),
-                  Obx(() => userC.isUploadingPhoto.value
-                      ? const CircularProgressIndicator()
-                      : const SizedBox.shrink()),
-                ],
-              ),
-
-              const SizedBox(height: 12),
-
-              ElevatedButton(
-                onPressed: () async {
-                  final confirm = await showDialog<bool>(
-                    context: context,
-                    builder: (ctx) => AlertDialog(
-                      title: const Text('Profil Fotoğrafı'),
-                      content: const Text('Profil fotoğrafını güncellemek ister misiniz?'),
-                      actions: [
-                        TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Hayır')),
-                        TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Evet')),
-                      ],
-                    ),
-                  );
-                  if (confirm == true) {
-                    userC.pickAndUploadPhoto();
-                  }
-                },
-                child: const Text('Fotoğrafı Güncelle'),
-              ),
-
-              const SizedBox(height: 24),
-
-              _readOnlyField(icon: Icons.person, label: 'Username', value: name),
-              const SizedBox(height: 16),
-              _readOnlyField(icon: Icons.email, label: 'Email', value: email),
-              const SizedBox(height: 16),
-              _readOnlyField(icon: Icons.cake, label: 'Age', value: age),
-              const SizedBox(height: 16),
-              _readOnlyField(icon: Icons.transgender, label: 'Gender', value: gender),
-            ],
-          ),
-        );
-      }),
-    );
-  }
-
-  Widget _readOnlyField({required IconData icon, required String label, required String value}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 4),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade200,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            children: [Icon(icon, size: 20, color: Colors.grey.shade600), const SizedBox(width: 8), Text(value)],
-          ),
-        ),
-      ],
     );
   }
 }

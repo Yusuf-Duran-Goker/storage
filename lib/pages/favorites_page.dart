@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../controllers/product_controller.dart';
 import '../controllers/favorite_controller.dart';
 import '../utils/app_colors.dart';
+import '../pages/product_detail_page.dart';
 
 class FavoritesPage extends StatelessWidget {
   const FavoritesPage({Key? key}) : super(key: key);
@@ -14,10 +15,16 @@ class FavoritesPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Favoriler'),
+        title: const Text('My Favorite'),
         centerTitle: true,
         backgroundColor: AppColors.primary,
         elevation: 0,
+        iconTheme: IconThemeData(color: AppColors.textDark),
+        titleTextStyle: TextStyle(
+          color: Colors.white,
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+        ),
       ),
       body: Obx(() {
         final favIds = favC.favoriteIds;
@@ -26,37 +33,71 @@ class FavoritesPage extends StatelessWidget {
         if (favProducts.isEmpty) {
           return Center(
             child: Text(
-              'Henüz favori yok',
-              style: TextStyle(color: AppColors.textDark),
+              'No favorites yet',
+              style: TextStyle(color: AppColors.textDark.withOpacity(0.6)),
             ),
           );
         }
 
-        return ListView.builder(
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        return GridView.builder(
+          padding: const EdgeInsets.all(16),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
+            childAspectRatio: 0.7,
+          ),
           itemCount: favProducts.length,
-          itemBuilder: (_, i) {
-            final p = favProducts[i];
-            return Card(
-              key: ValueKey(p.id),
-              margin: const EdgeInsets.symmetric(vertical: 8),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              elevation: 4,
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Row(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        p.image,
-                        width: 60,
-                        height: 60,
-                        fit: BoxFit.cover,
-                      ),
+          itemBuilder: (context, index) {
+            final p = favProducts[index];
+            return GestureDetector(
+              onTap: () => Get.to(() => ProductDetailPage(product: p)),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppColors.secondary,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 6,
+                      offset: Offset(0, 4),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Stack(
+                      children: [
+                        ClipRRect(
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                          child: Image.network(
+                            p.image,
+                            height: 140,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: GestureDetector(
+                            onTap: () => favC.toggleFavorite(p.id),
+                            child: Icon(
+                              favC.favoriteIds.contains(p.id)
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
+                              color: favC.favoriteIds.contains(p.id)
+                                  ? AppColors.accent
+                                  : AppColors.textDark.withOpacity(0.6),
+                              size: 24,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -64,20 +105,31 @@ class FavoritesPage extends StatelessWidget {
                             p.title,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontWeight: FontWeight.w600),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textDark,
+                            ),
                           ),
                           const SizedBox(height: 4),
                           Text(
+                            'Upbox Bag',
+                            style: TextStyle(
+                              color: AppColors.textDark.withOpacity(0.6),
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          // Fiyat rengi yeşil olarak güncellendi
+                          Text(
                             '\$${p.price.toStringAsFixed(2)}',
-                            style: const TextStyle(color: Colors.green),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
+                            ),
                           ),
                         ],
                       ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.favorite, color: Colors.red),
-                      onPressed: () => favC.toggleFavorite(p.id),
-                    ),
+                    )
                   ],
                 ),
               ),

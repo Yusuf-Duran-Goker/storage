@@ -59,8 +59,19 @@ class CategoryProductsPage extends StatelessWidget {
                     ),
                   ),
                 ),
-                title: Text(p.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-                subtitle: Text('\$${p.price.toStringAsFixed(2)}'),
+                title: Text(
+                  p.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                // Fiyatı yeşil renkte gösterecek şekilde güncellendi
+                subtitle: Text(
+                  '\$${p.price.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green,
+                  ),
+                ),
               ),
             ),
           );

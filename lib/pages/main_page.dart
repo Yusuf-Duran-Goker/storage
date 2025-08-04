@@ -1,5 +1,3 @@
-// lib/pages/main_page.dart
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:storage/pages/product_search_delegate.dart';
@@ -30,40 +28,49 @@ class _MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Kullanıcı adı + fotoğrafı için:
-    final uc        = Get.find<UserController>();
-    final profile   = uc.profile.value ?? {};
+    // Kullanıcı bilgileri ve fotoğraf URL'si
+    final uc = Get.find<UserController>();
+    final firebaseUser = uc.firebaseUser.value;
+    final profile = uc.profile.value ?? {};
     final firstName = profile['firstName'] as String?;
-    final email     = uc.firebaseUser.value?.email;
-    final name      = firstName ?? (email != null ? email.split('@').first : '');
-    final photoUrl  = profile['photoUrl'] as String?;
+    final email = firebaseUser?.email;
+    final displayName = firstName ?? email?.split('@').first ?? '';
+    final photoUrl = (profile['photoUrl'] as String?) ?? firebaseUser?.photoURL;
 
     return Scaffold(
-      // body: IndexedStack ile, sayfalar yeniden oluşturulmadan arasında geçiş yapıyoruz
       body: IndexedStack(
         index: _currentIndex,
         children: _pages.map((page) {
-          // Eğer ana sayfaysa AppBar'a özel başlığı + avatar ekleyelim
           if (page is ProductListPage) {
             return Scaffold(
               appBar: AppBar(
-                leading: Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: CircleAvatar(
-                    backgroundImage:
-                    photoUrl != null ? NetworkImage(photoUrl) : null,
-                    child: photoUrl == null
-                        ? const Icon(Icons.person_outline)
-                        : null,
-                  ),
-                ),
-                title: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                title: Row(
                   children: [
-                    Text('Hi, ${name.isNotEmpty ? name[0].toUpperCase() + name.substring(1) : ''}'),
-                    const Text(
-                      "Let's go shopping",
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400),
+                    // Profil avatarı
+                    CircleAvatar(
+                      radius: 18,
+                      backgroundColor: Colors.grey.shade200,
+                      backgroundImage: photoUrl != null
+                          ? NetworkImage(photoUrl)
+                          : null,
+                      child: photoUrl == null
+                          ? const Icon(Icons.person, color: Colors.grey)
+                          : null,
+                    ),
+                    const SizedBox(width: 12),
+                    // Kullanıcı adı ve alt metin
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Hi, ${displayName.isNotEmpty ? displayName : 'there'}'),
+                        const Text(
+                          "Let's go shopping",
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -82,11 +89,10 @@ class _MainPageState extends State<MainPage> {
               body: page,
             );
           }
-          // Diğer sayfalar zaten kendi Scaffold + AppBar içeriyor:
+          // Diğer sayfalarda kendi Scaffold + AppBar kullanılıyor
           return page;
         }).toList(),
       ),
-
       // Alt gezinme çubuğu
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,

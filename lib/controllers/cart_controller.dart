@@ -1,3 +1,5 @@
+// lib/controllers/cart_controller.dart
+
 import 'dart:async';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -16,11 +18,9 @@ class CartController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    // Oturum değişimlerini dinle
     _auth.authStateChanges().listen((user) {
       _sub?.cancel();
       if (user != null) {
-        // Kullanıcının dökümanını dinle
         _sub = _db
             .collection('users')
             .doc(_uid)
@@ -28,7 +28,6 @@ class CartController extends GetxController {
             .listen((snap) {
           final data = snap.data() ?? {};
           final raw = Map<String, dynamic>.from(data['cart'] ?? {});
-          // string-key’leri int’e dönüştür
           final restored = <int,int>{};
           raw.forEach((k,v) {
             final id = int.tryParse(k);
@@ -63,6 +62,18 @@ class CartController extends GetxController {
     } else {
       cart.remove(id);
     }
+    await _save();
+  }
+
+  /// Sepetten tamamen sil
+  Future<void> removeAllFromCart(int id) async {
+    cart.remove(id);
+    await _save();
+  }
+
+  /// Sepeti temizle (clear all items)
+  Future<void> clearCart() async {
+    cart.clear();
     await _save();
   }
 
