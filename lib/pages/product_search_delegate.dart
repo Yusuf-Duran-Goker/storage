@@ -1,3 +1,5 @@
+// lib/pages/product_search_delegate.dart
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -13,34 +15,30 @@ class ProductSearchDelegate extends SearchDelegate<String> {
   String get searchFieldLabel => 'Search products...';
 
   @override
-  List<Widget>? buildActions(BuildContext context) {
-    return [
-      if (query.isNotEmpty)
-        IconButton(
-          icon: const Icon(Icons.clear),
-          onPressed: () {
-            query = '';
-            _showingResults = false;
-            showSuggestions(context);
-          },
-        ),
-    ];
-  }
-
-  @override
-  Widget? buildLeading(BuildContext context) {
-    return IconButton(
-      icon: const Icon(Icons.arrow_back),
-      onPressed: () {
-        if (_showingResults) {
+  List<Widget>? buildActions(BuildContext context) => [
+    if (query.isNotEmpty)
+      IconButton(
+        icon: const Icon(Icons.clear),
+        onPressed: () {
+          query = '';
           _showingResults = false;
           showSuggestions(context);
-        } else {
-          close(context, '');
-        }
-      },
-    );
-  }
+        },
+      ),
+  ];
+
+  @override
+  Widget? buildLeading(BuildContext context) => IconButton(
+    icon: const Icon(Icons.arrow_back),
+    onPressed: () {
+      if (_showingResults) {
+        _showingResults = false;
+        showSuggestions(context);
+      } else {
+        close(context, '');
+      }
+    },
+  );
 
   @override
   void showResults(BuildContext context) {
@@ -85,13 +83,11 @@ class ProductSearchDelegate extends SearchDelegate<String> {
         itemBuilder: (context, index) {
           final p = results[index];
           return GestureDetector(
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => ProductDetailPage(product: p),
-                ),
-              );
-            },
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => ProductDetailPage(product: p),
+              ),
+            ),
             child: Card(
               clipBehavior: Clip.antiAlias,
               shape: RoundedRectangleBorder(
@@ -102,7 +98,7 @@ class ProductSearchDelegate extends SearchDelegate<String> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Expanded(
-                    child: Image.network(p.image, fit: BoxFit.cover),
+                    child: _buildSafeImage(p.image, fit: BoxFit.cover),
                   ),
                   Padding(
                     padding: const EdgeInsets.all(8.0),
@@ -188,7 +184,8 @@ class ProductSearchDelegate extends SearchDelegate<String> {
                   itemCount: products.length >= 4 ? 4 : products.length,
                   itemBuilder: (context, index) {
                     final product = products[index];
-                    final badge = ['Hot', 'New', 'Popular'][product['title'].hashCode % 3];
+                    final badge = ['Hot', 'New', 'Popular']
+                    [product['title'].hashCode % 3];
                     return Card(
                       color: AppColors.scaffoldBg,
                       elevation: 2,
@@ -199,21 +196,21 @@ class ProductSearchDelegate extends SearchDelegate<String> {
                       child: ListTile(
                         leading: ClipRRect(
                           borderRadius: BorderRadius.circular(8),
-                          child: Image.network(
-                            product['image'],
-                            width: 50,
-                            height: 50,
-                            fit: BoxFit.cover,
-                          ),
+                          child: _buildSafeImage(
+                              (product['image'] as String?) ?? '',
+                              width: 50,
+                              height: 50,
+                              fit: BoxFit.cover),
                         ),
                         title: Text(
-                          product['title'],
+                          product['title'] ?? '',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                         subtitle: Text(
                           badge,
-                          style: TextStyle(color: AppColors.accent, fontSize: 12),
+                          style:
+                          TextStyle(color: AppColors.accent, fontSize: 12),
                         ),
                         trailing: IconButton(
                           icon: Icon(
@@ -243,11 +240,40 @@ class ProductSearchDelegate extends SearchDelegate<String> {
   }
 
   Future<List<dynamic>> _fetchProducts() async {
-    final response = await http.get(Uri.parse('https://fakestoreapi.com/products'));
+    final response =
+    await http.get(Uri.parse('https://fakestoreapi.com/products'));
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
       return [];
     }
+  }
+
+  /// Geçersiz URL’lerde fallback gösterir
+  Widget _buildSafeImage(
+      String url, {
+        double? width,
+        double? height,
+        BoxFit? fit,
+      }) {
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return Image.network(
+        url,
+        width: width,
+        height: height,
+        fit: fit,
+        loadingBuilder: (c, child, prog) =>
+        prog == null ? child : const Center(child: CircularProgressIndicator()),
+        errorBuilder: (_, __, ___) =>
+        const Center(child: Icon(Icons.broken_image)),
+      );
+    }
+    // placeholder olarak bir asset veya boş container
+    return Container(
+      width: width,
+      height: height,
+      color: Colors.grey.shade200,
+      child: const Icon(Icons.broken_image, color: Colors.grey),
+    );
   }
 }

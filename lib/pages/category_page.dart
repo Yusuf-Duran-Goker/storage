@@ -11,46 +11,42 @@ class CategoryPage extends StatelessWidget {
     final pc = Get.find<ProductController>();
 
     return Obx(() {
-      final cats = pc.categories
-          .where((c) => c.toLowerCase() != 'all')
-          .toList();
+      // 1) boş 'All' dışındaki kategoriler zaten boş string içermiyor
+      final cats = pc.categories.where((c) => c.toLowerCase() != 'all').toList();
       if (cats.isEmpty) {
         return const Center(child: CircularProgressIndicator());
       }
-
-      final categoryImages = <String, String>{
-        'electronics': '',
-        'jewelery': 'https://www.europastarjewellery.com/local/cache-vignettes/L1000xH429/00de4e2bbc4d27e67483eb8f19a6d5-653a1.jpg?1752610768',
-        'men\'s clothing': '',
-        'women\'s clothing': '',
-      };
 
       return ListView.builder(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, kBottomNavigationBarHeight + 16),
         itemCount: cats.length,
         itemBuilder: (context, i) {
           final cat = cats[i];
-          final count = pc.products.where((p) => p.category == cat).length;
-          final fallbackImage = pc.products.firstWhere(
-                (p) => p.category == cat,
-            orElse: () => pc.products.first,
-          ).image;
-          final imageUrl = (categoryImages[cat]?.isNotEmpty == true)
-              ? categoryImages[cat]!
-              : fallbackImage;
+          final lower = cat.toLowerCase();
 
-          final isEven = i % 2 == 0;
+          // 2) case-insensitive filtre
+          final catProducts = pc.products
+              .where((p) => p.category.toLowerCase() == lower)
+              .toList();
+          if (catProducts.isEmpty) return const SizedBox.shrink();
 
-          Widget imageWidget = Image.network(
-            imageUrl,
-            width: 120,
-            height: 120,
-            fit: BoxFit.cover,
-            loadingBuilder: (c, child, prog) {
-              if (prog == null) return child;
-              return const Center(child: CircularProgressIndicator());
-            },
-            errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.broken_image)),
+          final count = catProducts.length;
+          final imageUrl = catProducts.first.image;
+
+          final isEven = i.isEven;
+
+          Widget imageWidget = ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.network(
+              imageUrl,
+              width: 120,
+              height: 120,
+              fit: BoxFit.cover,
+              loadingBuilder: (c, child, prog) =>
+              prog == null ? child : const Center(child: CircularProgressIndicator()),
+              errorBuilder: (_, __, ___) =>
+              const Center(child: Icon(Icons.broken_image)),
+            ),
           );
 
           Widget textWidget = Expanded(
@@ -60,18 +56,9 @@ class CategoryPage extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    cat[0].toUpperCase() + cat.substring(1),
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  Text(cat, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
-                  Text(
-                    '$count Products',
-                    style: TextStyle(color: Colors.grey.shade600),
-                  ),
+                  Text('$count Products', style: TextStyle(color: Colors.grey.shade600)),
                 ],
               ),
             ),
@@ -92,28 +79,8 @@ class CategoryPage extends StatelessWidget {
                     height: 120,
                     child: Row(
                       children: isEven
-                          ? [
-                        // Text left, image right
-                        textWidget,
-                        ClipRRect(
-                          borderRadius: const BorderRadius.only(
-                            topRight: Radius.circular(16),
-                            bottomRight: Radius.circular(16),
-                          ),
-                          child: imageWidget,
-                        ),
-                      ]
-                          : [
-                        // Image left, text right
-                        ClipRRect(
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(16),
-                            bottomLeft: Radius.circular(16),
-                          ),
-                          child: imageWidget,
-                        ),
-                        textWidget,
-                      ],
+                          ? [textWidget, imageWidget]
+                          : [imageWidget, textWidget],
                     ),
                   ),
                 ),

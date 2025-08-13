@@ -1,3 +1,5 @@
+// lib/widgets/banner_slider.dart
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -32,6 +34,11 @@ class _BannerSliderState extends State<BannerSlider> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.imageUrls.isEmpty) {
+      // Hiç URL yoksa boş döner
+      return const SizedBox.shrink();
+    }
+
     return Column(
       children: [
         SizedBox(
@@ -39,20 +46,13 @@ class _BannerSliderState extends State<BannerSlider> {
           child: PageView.builder(
             controller: _pageController,
             itemCount: widget.imageUrls.length,
-            itemBuilder: (_, i) {
+            itemBuilder: (context, i) {
+              final url = widget.imageUrls[i];
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: Image.network(
-                    widget.imageUrls[i],
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    loadingBuilder: (c, child, progress) =>
-                    progress == null ? child : Center(child: CircularProgressIndicator()),
-                    errorBuilder: (_, __, ___) =>
-                    const Center(child: Icon(Icons.broken_image)),
-                  ),
+                  child: _buildSafeImage(url),
                 ),
               );
             },
@@ -80,6 +80,26 @@ class _BannerSliderState extends State<BannerSlider> {
           );
         }),
       ],
+    );
+  }
+
+  /// Geçersiz URL’lerde fallback gösterir
+  Widget _buildSafeImage(String url) {
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return Image.network(
+        url,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        loadingBuilder: (c, child, prog) =>
+        prog == null ? child : const Center(child: CircularProgressIndicator()),
+        errorBuilder: (_, __, ___) =>
+        const Center(child: Icon(Icons.broken_image)),
+      );
+    }
+    // placeholder
+    return Container(
+      color: Colors.grey.shade200,
+      child: const Center(child: Icon(Icons.broken_image)),
     );
   }
 }

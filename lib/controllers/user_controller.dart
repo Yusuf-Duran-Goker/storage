@@ -82,6 +82,9 @@ class UserController extends GetxController {
     await updateProfile(firstName: name);
   }
 
+  /// Admin durumunu kontrol et
+  bool get isAdmin => profile.value?['isAdmin'] ?? false; // Düzeltme: role yerine isAdmin
+
   /// Galeriden seçim yapıp Storage’a yükler, Firestore’a URL kaydeder
   Future<void> pickAndUploadPhoto() async {
     final uid = _auth.currentUser?.uid;
